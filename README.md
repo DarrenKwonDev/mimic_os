@@ -2,6 +2,24 @@
 
 mimicking some OS features using qemu-system-riscv32  
 
+```text
+kernel.c (소스 코드) → 컴파일/링크 → kernel.elf (실행 파일) → QEMU 에뮬레이션 → 실행 및 디버깅 
+    ↑                                  ↑  
+    |                                  |  
+ kernel.ld ----------------------------|  
+(링커 스크립트)  
+```
+
+```text
+응용 프로그램 (User mode, U-mode)  
+          ↑↓
+운영체제 커널 (Supervisor mode, S-mode) - os code. in kernel code  
+          ↑↓ [ECALL을 통한 SBI 호출]  
+SBI/SEE (Machine mode, M-mode 또는 Hypervisor mode, H-mode) - OpenSBI같은 펌웨어  
+          ↑↓
+하드웨어 (실제 RISC-V 프로세서)  
+```
+
 ## features  
 
 NOT YET   
