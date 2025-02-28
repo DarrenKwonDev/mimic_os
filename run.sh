@@ -14,7 +14,8 @@ CFLAGS="-std=c11 -O2 -g3 -Wall -Wextra --target=riscv32-unknown-elf -fno-stack-p
 # 커널 빌드
 $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=kernel.map \
     -o kernel.elf \
-    kernel.c
+    kernel.c \
+    common.c
 
 #-machine virt: virt 머신을 시작합니다. -machine '?' 명령어로 다른 머신 종류를 확인할 수 있습니다.
 #-bios default: QEMU가 제공하는 기본 펌웨어(OpenSBI)를 사용합니다.
