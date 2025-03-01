@@ -7,15 +7,29 @@ set -xue
 
 QEMU=qemu-system-riscv32
 
+OBJCOPY=/usr/bin/llvm-objcopy
+
 # clang 경로와 컴파일 옵션
 CC=/usr/bin/clang
 CFLAGS="-std=c11 -O2 -g3 -Wall -Wextra --target=riscv32-unknown-elf -fno-stack-protector -ffreestanding -nostdlib"
 
+# 사용자 applicaiton을 ELF 형식으로 컴파일  
+$CC $CFLAGS -Wl,-Tuser.ld -Wl,-Map=shell.map -o shell.elf shell.c user.c common.c
+
+# ELF 파일을 순수 바이너리(.bin)로 변환 - 메타데이터 제거하고 실행 코드와 데이터만 추출
+# .bss 섹션(초기화되지 않은 데이터)도 출력에 포함시킴
+$OBJCOPY --set-section-flags .bss=alloc,contents -O binary shell.elf shell.bin
+
+# 순수 바이너리(.bin)를 오브젝트 파일(.o)로 변환 - 커널에서 참조할 수 있는 심볼 생성
+# _binary_shell_bin_start, _binary_shell_bin_end, _binary_shell_bin_size 심볼이 자동 생성됨
+$OBJCOPY -Ibinary -Oelf32-littleriscv shell.bin shell.bin.o
+
+
 # 커널 빌드
-$CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=kernel.map \
-    -o kernel.elf \
+$CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=kernel.map -o kernel.elf \
     kernel.c \
-    common.c
+    common.c \
+    shell.bin.o
 
 #-machine virt: virt 머신을 시작합니다. -machine '?' 명령어로 다른 머신 종류를 확인할 수 있습니다.
 #-bios default: QEMU가 제공하는 기본 펌웨어(OpenSBI)를 사용합니다.
