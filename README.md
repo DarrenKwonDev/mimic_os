@@ -65,4 +65,39 @@ C-a C-a  C-a를 전송
 | x28 - x31   | t3 - t6          | 임시용 레지스터
 
 
+ra (x1): Return Address - 함수 호출 후 돌아갈 주소를 저장  
+sp (x2): Stack Pointer - 현재 스택의 최상단을 가리킴  
+gp (x3): Global Pointer - 전역 변수에 쉽게 접근하기 위한 포인터  
+tp (x4): Thread Pointer - 스레드 로컬 저장소를 가리킴  
+t0-t6 (x5-x7, x28-x31): Temporary registers - 임시 값 저장용, 함수 호출 시 보존되지 않음  
+s0-s11 (x8-x9, x18-x27): Saved registers - 함수 호출 간에 보존되어야 하는 값 저장  
+a0-a7 (x10-x17): Argument/Return registers - 함수 인자 및 반환값 전달에 사용  
+
+
+## exception
+
+```text
+CPU가 medeleg 레지스터 확인 (예외 처리 모드 결정)
+        ↓
+CSR에 상태 저장
+    - scause: 예외 유형
+    - stval: 예외 부가 정보
+    - sepc: 예외 발생 PC 값
+    - sstatus: 예외 발생 시 운영 모드
+        ↓
+stvec 레지스터 값으로 PC 변경 (예외 핸들러 주소로 점프)
+        ↓
+커널 예외 핸들러 실행
+        ↓
+일반 레지스터 상태 저장
+        ↓
+예외 처리 로직 수행 (scause로 예외 유형 확인)
+        ↓
+저장했던 상태 복원
+        ↓
+sret 명령어로 예외 발생 지점으로 복귀
+        ↓
+프로그램 실행 재개
+```
+
 
