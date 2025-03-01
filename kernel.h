@@ -2,6 +2,9 @@
 
 #include "common.h"
 
+// 애플리케이션 이미지의 기본 가상 주소입니다. 이는 `user.ld`에 정의된 시작 주소와 일치해야 합니다.
+#define USER_BASE 0x1000000
+
 // do-while(0) 패턴. 
 // 세미콜론 문제를 해결하고 매크로 내 break, continue가 외부 루프에 주는 영향을 방지합니다
 // 여러 줄로 된 macro를 작성할 때는 관습적으로 작성함  
@@ -35,6 +38,8 @@
 #define PROCS_MAX       8
 #define PROC_UNUSED     0
 #define PROC_RUNNABLE   1
+
+#define SSTATUS_SPIE (1 << 5)
 
 struct process {
     int                 pid;    

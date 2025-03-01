@@ -6,9 +6,11 @@ extern char __kernel_base[];
 extern char __bss[], __bss_end[], __stack_top[];
 extern char __free_ram[], __free_ram_end[];
 
+/* shell.bin.o 에 포함된 심볼 */
+extern char _binary_shell_bin_start[], _binary_shell_bin_size[];
 
 void map_page(uint32_t *table1, vaddr_t vaddr, paddr_t paddr, uint32_t flags);
-struct process *create_process(uint32_t pc);
+struct process *create_process(const void *image, size_t image_size);
 void switch_context(uint32_t *prev_sp, uint32_t *next_sp);
 void yield(void);
 paddr_t alloc_pages(uint32_t n);
@@ -18,6 +20,20 @@ void kernel_entry(void);
 void handle_trap(struct trap_frame *f);
 void delay(void);
 void kernel_main(void);
+
+
+__attribute__((naked))
+void user_entry(void) {
+    __asm__ __volatile__(
+        "csrw sepc, %[sepc]        \n"
+        "csrw sstatus, %[sstatus]  \n"
+        "sret                      \n"
+        :
+        : [sepc] "r" (USER_BASE),
+          [sstatus] "r" (SSTATUS_SPIE)
+    );
+}
+
 
 //--------------------------------------------------------------
 // [page table]
@@ -53,7 +69,8 @@ struct process procs[PROCS_MAX];        // 모든 프로세스를 모아 두는 
 struct process *current_proc;           // 현재 실행 중인 process 
 struct process *idle_proc;              // idle process
 
-struct process *create_process(uint32_t pc)
+
+struct process *create_process(const void *image, size_t image_size)
 {
     struct process *proc = NULL;
     int i;
@@ -84,13 +101,25 @@ struct process *create_process(uint32_t pc)
     *--sp = 0;                      // s2
     *--sp = 0;                      // s1
     *--sp = 0;                      // s0
-    *--sp = (uint32_t) pc;          // ra (처음 실행 시 점프할 주소)
+    *--sp = (uint32_t) user_entry;  // ra (처음 실행 시 점프할 주소) user application 실행
 
     // map kernel page
     uint32_t *page_table = (uint32_t *) alloc_pages(1);
     for (paddr_t paddr = (paddr_t) __kernel_base;
     paddr < (paddr_t) __free_ram_end; paddr += PAGE_SIZE)
     map_page(page_table, paddr, paddr, PAGE_R | PAGE_W | PAGE_X);
+
+    // map user page
+    for (uint32_t off = 0; off < image_size; off += PAGE_SIZE)
+    {
+        paddr_t page = alloc_pages(1);
+
+        size_t remaining = image_size - off;
+        size_t copy_size = PAGE_SIZE <= remaining ? PAGE_SIZE : remaining;
+
+        memcpy((void *) page, image + off, copy_size);
+        map_page(page_table, USER_BASE + off, page, PAGE_U | PAGE_R | PAGE_W | PAGE_X);
+    }
 
     // 구조체 필드 초기화
     proc->pid = i + 1;
@@ -381,12 +410,11 @@ void kernel_main(void)
 
     WRITE_CSR(stvec, (uint32_t) kernel_entry);
 
-    idle_proc = create_process((uint32_t) NULL);
+    idle_proc = create_process(NULL, 0);
     idle_proc->pid = 0; // idle
     current_proc = idle_proc;
 
-    proc_a = create_process((uint32_t) proc_a_entry);
-    proc_b = create_process((uint32_t) proc_b_entry);
+    create_process(_binary_shell_bin_start, (size_t) _binary_shell_bin_size);
 
     yield();
     PANIC("switched to idle process");
