@@ -73,7 +73,6 @@ t0-t6 (x5-x7, x28-x31): Temporary registers - 임시 값 저장용, 함수 호�
 s0-s11 (x8-x9, x18-x27): Saved registers - 함수 호출 간에 보존되어야 하는 값 저장  
 a0-a7 (x10-x17): Argument/Return registers - 함수 인자 및 반환값 전달에 사용  
 
-
 ## exception
 
 ```text
@@ -100,4 +99,25 @@ sret 명령어로 예외 발생 지점으로 복귀
 프로그램 실행 재개
 ```
 
+## callee, caller saved reg
 
+| Register  | ABI Name | Description                     | Saver  |   
+|-----------|----------|---------------------------------|--------|  
+| x0        | zero     | Hard-wired zero                 | —     |  
+| x1        | ra       | Return address                  | Caller |   
+| x2        | sp       | Stack pointer                   | Callee |   
+| x3        | gp       | Global pointer                  | —     |   
+| x4        | tp       | Thread pointer                  | —     |   
+| x5-7      | t0-2     | Temporaries                     | Caller |   
+| x8        | s0/fp    | Saved register/frame pointer    | Callee |   
+| x9        | s1       | Saved register                  | Callee |   
+| x10-11    | a0-1     | Function arguments/return values| Caller |   
+| x12-17    | a2-7     | Function arguments              | Caller |   
+| x18-27    | s2-11    | Saved registers                 | Callee |   
+| x28-31    | t3-6     | Temporaries                     | Caller |   
+| f0-7      | ft0-7    | FP temporaries                  | Caller |   
+| f8-9      | fs0-1    | FP saved registers              | Callee |  
+| f10-11    | fa0-1    | FP arguments/return values      | Caller |   
+| f12-17    | fa2-7    | FP arguments                    | Caller |   
+| f18-27    | fs2-11   | FP saved registers              | Callee |   
+| f28-31    | ft8-11   | FP temporaries                  | Caller |    
