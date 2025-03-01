@@ -1,24 +1,47 @@
 #include "kernel.h"
 #include "common.h"
 
-#define PROCS_MAX       8
-#define PROC_UNUSED     0
-#define PROC_RUNNABLE   1
-
-struct process {
-    int             pid;    
-    int           state;    // (PROC_UNUSED | PROC_RUNNABLE)
-    vaddr_t          sp;    // stack pointer
-    uint8_t stack[8192];    // kernel stack. 저장된 CPU 레지스터, 함수 리턴 주소, 로컬 변수 등으로 활용. (user stack과 다름)
-};
-
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
-typedef uint32_t size_t;
-
 /* linker script에 작성한 것과 동일한 변수명이어야 함 */
+extern char __kernel_base[];
 extern char __bss[], __bss_end[], __stack_top[];
 extern char __free_ram[], __free_ram_end[];
+
+
+void map_page(uint32_t *table1, vaddr_t vaddr, paddr_t paddr, uint32_t flags);
+struct process *create_process(uint32_t pc);
+void switch_context(uint32_t *prev_sp, uint32_t *next_sp);
+void yield(void);
+paddr_t alloc_pages(uint32_t n);
+struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4, long arg5, long fid,  long eid);
+void putchar(char ch);
+void kernel_entry(void);
+void handle_trap(struct trap_frame *f);
+void delay(void);
+void kernel_main(void);
+
+//--------------------------------------------------------------
+// [page table]
+
+void map_page(uint32_t *table1, vaddr_t vaddr, paddr_t paddr, uint32_t flags)
+{
+    if (!is_aligned(vaddr, PAGE_SIZE))
+        PANIC("unaligned vaddr %x", vaddr);
+
+    if (!is_aligned(paddr, PAGE_SIZE))
+        PANIC("unaligned paddr %x", paddr);
+
+    uint32_t vpn1 = (vaddr >> 22) & 0x3ff;
+    if ((table1[vpn1] & PAGE_V) == 0)
+    {
+        uint32_t pt_paddr = alloc_pages(1);
+        table1[vpn1] = ((pt_paddr / PAGE_SIZE) << 10) | PAGE_V;
+    }
+
+    uint32_t vpn0 = (vaddr >> 12) & 0x3ff;
+    uint32_t *table0 = (uint32_t *)((table1[vpn1] >> 10) * PAGE_SIZE);
+    table0[vpn0] = ((paddr / PAGE_SIZE) << 10) | flags | PAGE_V;
+}
+
 
 
 
@@ -63,10 +86,17 @@ struct process *create_process(uint32_t pc)
     *--sp = 0;                      // s0
     *--sp = (uint32_t) pc;          // ra (처음 실행 시 점프할 주소)
 
+    // map kernel page
+    uint32_t *page_table = (uint32_t *) alloc_pages(1);
+    for (paddr_t paddr = (paddr_t) __kernel_base;
+    paddr < (paddr_t) __free_ram_end; paddr += PAGE_SIZE)
+    map_page(page_table, paddr, paddr, PAGE_R | PAGE_W | PAGE_X);
+
     // 구조체 필드 초기화
     proc->pid = i + 1;
     proc->state = PROC_RUNNABLE;
     proc->sp = (uint32_t) sp;
+    proc->page_table = page_table;
     return proc;
 }
 
@@ -145,13 +175,19 @@ void yield(void)
         return;
 
     __asm__ __volatile__(
+        "sfence.vma\n"
+        "csrw satp, %[satp]\n"
+        "sfence.vma\n"
         "csrw sscratch, %[sscratch]\n"
         :
-        : [sscratch] "r" ((uint32_t)&next->stack[sizeof(next->stack)])
+        :[satp] "r" (SATP_SV32 | ((uint32_t) next->page_table / PAGE_SIZE)),
+         [sscratch] "r" ((uint32_t)&next->stack[sizeof(next->stack)])
     );
 
     struct process *prev = current_proc;
     current_proc = next;
+
+    // 실질적인 context switching  
     switch_context(&prev->sp, &next->sp);
 }
 
