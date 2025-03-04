@@ -12,6 +12,9 @@ typedef uint32_t            paddr_t;
 typedef uint32_t            vaddr_t;
 
 
+#define SYS_PUTCHAR 1
+#define SYS_EXIT    3
+
 #define true    1
 #define false   0
 #define NULL    ((void *)0)

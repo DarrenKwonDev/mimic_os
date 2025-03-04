@@ -3,5 +3,11 @@
 void main(void)
 {
     // *((volatile int *) 0x80200000) = 0x1234; // should panic
-    for(;;);
+    
+
+    printf("Hello world from user level\n");
+
+    exit();
+
+    // for(;;);
 }

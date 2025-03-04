@@ -73,6 +73,7 @@ t0-t6 (x5-x7, x28-x31): Temporary registers - 임시 값 저장용, 함수 호�
 s0-s11 (x8-x9, x18-x27): Saved registers - 함수 호출 간에 보존되어야 하는 값 저장  
 a0-a7 (x10-x17): Argument/Return registers - 함수 인자 및 반환값 전달에 사용  
 
+
 ## exception
 
 ```text
@@ -98,6 +99,15 @@ sret 명령어로 예외 발생 지점으로 복귀
         ↓
 프로그램 실행 재개
 ```
+
+## syscall
+
+user level function 호출  
+내부적으로 syscall 호출  
+syscall은 register에 인자를 설정하고 ecall 명령어 실행  
+ecall 명령어 실행 시 exception 발생  
+exception handler 에서 scause의 유형에 따라 적당한 처리 함수를 트리거  
+
 
 ## callee, caller saved reg
 
