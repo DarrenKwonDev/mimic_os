@@ -2,23 +2,6 @@
 
 mimicking some OS features using qemu-system-riscv32  
 
-```text
-kernel.c (소스 코드) → 컴파일/링크 → kernel.elf (실행 파일) → QEMU 에뮬레이션 → 실행 및 디버깅 
-    ↑                                  ↑  
-    |                                  |  
- kernel.ld ----------------------------|  
-(링커 스크립트)  
-```
-
-```text
-응용 프로그램 (User mode, U-mode)  
-          ↑↓
-운영체제 커널 (Supervisor mode, S-mode) - os code. in kernel code  
-          ↑↓ [ECALL을 통한 SBI 호출]  
-SBI/SEE (Machine mode, M-mode 또는 Hypervisor mode, H-mode) - OpenSBI같은 펌웨어  
-          ↑↓
-하드웨어 (실제 RISC-V 프로세서)  
-```
 
 ## features  
 
@@ -63,6 +46,28 @@ t0-t6 (x5-x7, x28-x31): Temporary registers - 임시 값 저장용, 함수 호�
 s0-s11 (x8-x9, x18-x27): Saved registers - 함수 호출 간에 보존되어야 하는 값 저장  
 a0-a7 (x10-x17): Argument/Return registers - 함수 인자 및 반환값 전달에 사용  
 
+
+## compile process  
+
+```text
+kernel.c (소스 코드) → 컴파일/링크 → kernel.elf (실행 파일) → QEMU 에뮬레이션 → 실행 및 디버깅 
+    ↑                                  ↑  
+    |                                  |  
+ kernel.ld ----------------------------|  
+(링커 스크립트)  
+```
+
+## how to boot up?  
+
+```text
+응용 프로그램 (User mode, U-mode)  
+          ↑↓
+운영체제 커널 (Supervisor mode, S-mode) - os code. in kernel code  
+          ↑↓ [ECALL을 통한 SBI 호출]  
+SBI/SEE (Machine mode, M-mode 또는 Hypervisor mode, H-mode) - OpenSBI같은 펌웨어  
+          ↑↓
+하드웨어 (실제 RISC-V 프로세서)  
+```
 
 ## exception
 
