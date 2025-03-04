@@ -39,9 +39,5 @@ $CC $CFLAGS -Wl,-Tkernel.ld -Wl,-Map=kernel.map -o kernel.elf \
 #                   호스트의 키보드 입력이 가상 머신으로 전달됩니다.
 #                   mon: 접두사를 붙여 Ctrl+A 이후 C를 눌러 QEMU 모니터로 전환할 수 있습니다.
 #--no-reboot: 가상 머신이 크래시되면 재부팅하지 않고 종료합니다(디버깅 시에 편리합니다).
-$QEMU -machine virt \
-      -bios default \
-      -nographic \
-      -serial mon:stdio \
-      --no-reboot \
+$QEMU -machine virt -bios default -nographic -serial mon:stdio --no-reboot \
       -kernel kernel.elf

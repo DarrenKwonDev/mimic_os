@@ -356,6 +356,9 @@ void kernel_entry(void)
 }
 
 
+
+// syscall이란 ISA를 통해 레지스터를 조작하고 특정 행동을 트리거할 뿐임.
+// 그것이 kernel level에서 이루어진다는 점만 특이할 뿐이지 특별히 다른 것이 아님.  
 void handle_syscall(struct trap_frame *f)
 {
     switch (f->a3)

@@ -22,21 +22,11 @@ SBI/SEE (Machine mode, M-mode 또는 Hypervisor mode, H-mode) - OpenSBI같은 �
 
 ## features  
 
-NOT YET   
-
-## tree  
-
-├── disk/ - 파일 시스템용 디렉터리   
-├── common.c - 커널/유저 공용 라이브러리(printf, memset 등)  
-├── common.h - 커널/유저 공용 라이브러리용 구조체 및 상수 정의  
-├── kernel.c - 커널(프로세스 관리, 시스템 콜, 디바이스 드라이버, 파일 시스템 등)  
-├── kernel.h - 커널용 구조체 및 상수 정의  
-├── kernel.ld - 커널용 링커 스크립트(메모리 레이아웃 정의)  
-├── shell.c - 명령줄 셸  
-├── user.c - 유저 라이브러리(시스템 콜 관련 함수)  
-├── user.h - 유저 라이브러리용 구조체 및 상수 정의  
-├── user.ld - 유저용 링커 스크립트(메모리 레이아웃 정의)  
-└── run.sh - 빌드 스크립트  
+- co-operative multi tasking   
+- syscall  
+- exception handler   
+- no std lib   
+- page table   
 
 
 ## QEMU shortcut  
